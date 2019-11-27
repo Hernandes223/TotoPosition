@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { DataService } from '../data.service';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
+
+
 
 
 @Component({
@@ -10,8 +14,8 @@ import { DataService } from '../data.service';
 })
 export class HomePage {
 
-  dado: [];
 
+  center: any = '0,0';
   constructor(
     private geolocation: Geolocation,
     public dados: DataService
@@ -29,22 +33,24 @@ export class HomePage {
        console.log('Error getting location', error);
      });
      
-     var watch = this.geolocation.watchPosition();
-     watch.subscribe((data) => {
-      // data can be a set of coordinates, or an error (if an error occurred).
-       data.coords.latitude
-       data.coords.longitude
+     const subscription = this.geolocation.watchPosition()
+                              .pipe(filter((p) => p.coords !== undefined)) //Filter Out Errors
+                              .subscribe(position => {
+  console.log(position.coords.longitude + ' ' + position.coords.latitude);
 
-       console.log(data);
-       var dados = data;
-       this.dados.local(dados).then((resp) => {
-        if (resp) {
-          console.log('dados enviados')
+        const data = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
         }
-      }).catch((error) => {
-        console.log('Error no evio da localizacao', error);
-      });
+        this.dados.local(data).then((resp) => {
+         if (resp) {
+           console.log('dados enviados')
+         }
+       }).catch((error) => {
+         console.log('Error no evio da localizacao', error);
+       });
      });
+
 
 
      
